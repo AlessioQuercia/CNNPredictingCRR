@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ba2d30b3-6c76-4d15-9075-68ec2be7e8bb" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CNN.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CNN_Fashion.py" afterDir="false" />
-    </list>
+    <list default="true" id="ba2d30b3-6c76-4d15-9075-68ec2be7e8bb" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,7 +10,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/Progetto_BioInfo$CNN_Fashion.coverage" NAME="CNN_Fashion Coverage Results" MODIFIED="1557655928855" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Progetto_BioInfo$CNN_Fashion.coverage" NAME="CNN_Fashion Coverage Results" MODIFIED="1557909121318" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Progetto_BioInfo$Main.coverage" NAME="Main Coverage Results" MODIFIED="1557581593113" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
@@ -22,8 +18,8 @@
       <file leaf-file-name="CNN_Fashion.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/CNN_Fashion.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="527">
-              <caret line="187" lean-forward="true" selection-start-line="187" selection-end-line="187" />
+            <state relative-caret-position="-1309">
+              <caret line="13" column="19" selection-start-line="13" selection-start-column="12" selection-end-line="13" selection-end-column="19" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -182,7 +178,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
+    <frame x="-8" y="-8" width="1382" height="744" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -190,7 +186,7 @@
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3290938" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3290938" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17642753" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
@@ -287,8 +283,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CNN_Fashion.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="527">
-          <caret line="187" lean-forward="true" selection-start-line="187" selection-end-line="187" />
+        <state relative-caret-position="-1309">
+          <caret line="13" column="19" selection-start-line="13" selection-start-column="12" selection-end-line="13" selection-end-column="19" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
