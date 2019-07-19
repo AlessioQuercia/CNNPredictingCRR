@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import random
 
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -148,3 +149,12 @@ def conv_net_gen(x, conv_num, full_h_num, ker_r, ker_c, ker_ch, ker_num, out_num
     out = tf.add(tf.matmul(fcl, w), b)
 
     return out
+
+
+data_X = ["mela", "pera", "banana", "pesca", "ananas", "albicocca"]
+random.Random(7).shuffle(data_X)
+print(data_X)
+
+data_Y = [1, 2, 3, 4, 5, 6]
+random.Random(7).shuffle(data_Y)
+print(data_Y)

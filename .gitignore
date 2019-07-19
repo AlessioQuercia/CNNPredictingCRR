@@ -1,3 +1,4 @@
-\Output
-\venv
-\Input
+Output/
+Input/
+.idea/
+data/bioinfo/GM12878_data.npz
