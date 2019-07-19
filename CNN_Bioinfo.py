@@ -145,18 +145,25 @@ def conv_net(x):
 
 input_file = 'data\\bioinfo\\GM12878.csv'
 
-labels_to_array(input_file)
+data_Y = labels_to_array(input_file)
 
-# input_file = 'data\\bioinfo\\GM12878.fa'
-# output_file = 'data\\bioinfo\\GM12878_in.npz'
+input_file = 'data\\bioinfo\\GM12878.fa'
+output_file = 'data\\bioinfo\\GM12878_in.npz'
 
 #store_data(input_file, output_file)
 
-# matrices = np.load(output_file)
-#
-# for m in matrices.items():
-#     print(m)
-#     break
+matrices = np.load(output_file)
+
+data_X = []
+
+for m in matrices.items():
+    data_X.append(m[1])
+
+data_X = np.array(data_X)
+data_Y = np.array(data_Y)
+
+print(data_X.shape)
+print(data_Y.shape)
 
 
 #### DATASET ####
