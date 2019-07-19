@@ -2,6 +2,7 @@ from Bio import SeqIO
 import numpy as np
 import tensorflow as tf
 import csv
+from sklearn.model_selection import train_test_split
 
 
 # Convert a sequence to its One Hot Encoding representation
@@ -145,36 +146,66 @@ def conv_net(x):
     out = tf.add(tf.matmul(fcl, w), b)
     return out
 
-input_file = 'data\\bioinfo\\GM12878.csv'
-output_file = 'data\\bioinfo\\GM12878_in.npy'
+# input_file = 'data\\bioinfo\\GM12878.csv'
+# output_file = 'data\\bioinfo\\GM12878_in.npy'
 
-data_Y = labels_to_array(input_file)
-
-input_file = 'data\\bioinfo\\GM12878.fa'
-output_file = 'data\\bioinfo\\GM12878_in.npz'
+# data_Y = labels_to_array(input_file)
+#
+# input_file = 'data\\bioinfo\\GM12878.fa'
+# output_file = 'data\\bioinfo\\GM12878_in.npz'
 
 #store_data(input_file, output_file)
 
-matrices = np.load(output_file)
-
-data_X = []
-
-for m in matrices.items():
-    data_X.append(m[1])
-
-data_X = np.array(data_X)
-
-print(data_X.shape)
-print(data_Y.shape)
-
-data_list = []
-data_list.append(data_X)
-data_list.append(data_Y)
-output_file = 'data\\bioinfo\\GM12878_data.npz'
-np.savez(output_file, *data_list)
+# matrices = np.load(output_file)
+#
+# data_X = []
+#
+# for m in matrices.items():
+#     data_X.append(m[1])
+#
+# data_X = np.array(data_X)
+#
+# print(data_X.shape)
+# print(data_Y.shape)
+#
+# data_list = []
+# data_list.append(data_X)
+# data_list.append(data_Y)
+# output_file = 'data\\bioinfo\\GM12878_data.npz'
+# np.savez(output_file, *data_list)
 
 
 #### DATASET ####
+data_X=[]
+data_Y=[]
+# data_X=data_dict.values()[0]
+# data_Y=data_dict.values()[1]
+
+input_file = 'data\\bioinfo\\GM12878_data.npz'
+data_dict = np.load(input_file)
+for k,v in data_dict.items():
+    if k == "arr_0":
+        data_X=v
+    if k == "arr_1":
+        data_Y=v
+data_X=np.array(data_X)
+data_Y=np.array(data_Y)
+print(data_X.shape)
+print(data_Y.shape)
+
+X_train, X_test, Y_train, Y_test = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
+
+X_train = np.array(X_train)
+X_test = np.array(X_test)
+Y_train = np.array(Y_train)
+Y_test = np.array(Y_test)
+
+print(X_train.shape)
+print(Y_train.shape)
+print(X_test.shape)
+print(Y_test.shape)
+
+
 # # Reshape training and testing image
 # train_X = data.train.images.reshape(-1, 28, 28, 1)
 # test_X = data.test.images.reshape(-1, 28, 28, 1)
