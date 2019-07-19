@@ -2,5 +2,7 @@ Output/
 Input/
 .idea/
 data/bioinfo/GM12878_data.npz
+data/fashion/
+data/mnist/
 CNN.py
 CNN_Fashion.py
