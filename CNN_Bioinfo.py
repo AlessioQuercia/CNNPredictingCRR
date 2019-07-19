@@ -21,25 +21,27 @@ def to_OHE(sequence):
 
 
 def labels_to_array(input_file):
-    array = []
+    matrix = []
     with open(input_file, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
         for row in spamreader:
+            array = np.zeros(7)
             if row[0] == 'A-E':
-                array.append(0)
+                array[0] = 1
             if row[0] == 'I-E':
-                array.append(1)
+                array[1] = 1
             if row[0] == 'A-P':
-                array.append(2)
+                array[2] = 1
             if row[0] == 'I-P':
-                array.append(3)
+                array[3] = 1
             if row[0] == 'A-X':
-                array.append(4)
+                array[4] = 1
             if row[0] == 'I-X':
-                array.append(5)
+                array[5] = 1
             if row[0] == 'UK':
-                array.append(6)
-    return array
+                array[6] = 1
+            matrix.append(array)
+    return np.array(matrix)
 
 
 
@@ -144,6 +146,7 @@ def conv_net(x):
     return out
 
 input_file = 'data\\bioinfo\\GM12878.csv'
+output_file = 'data\\bioinfo\\GM12878_in.npy'
 
 data_Y = labels_to_array(input_file)
 
@@ -160,10 +163,15 @@ for m in matrices.items():
     data_X.append(m[1])
 
 data_X = np.array(data_X)
-data_Y = np.array(data_Y)
 
 print(data_X.shape)
 print(data_Y.shape)
+
+data_list = []
+data_list.append(data_X)
+data_list.append(data_Y)
+output_file = 'data\\bioinfo\\GM12878_data.npz'
+np.savez(output_file, *data_list)
 
 
 #### DATASET ####
