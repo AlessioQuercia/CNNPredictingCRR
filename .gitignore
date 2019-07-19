@@ -2,3 +2,5 @@ Output/
 Input/
 .idea/
 data/bioinfo/GM12878_data.npz
+CNN.py
+CNN_Fashion.py
