@@ -1,6 +1,7 @@
 from Bio import SeqIO
 import numpy as np
 import tensorflow as tf
+import csv
 
 
 # Convert a sequence to its One Hot Encoding representation
@@ -17,6 +18,30 @@ def to_OHE(sequence):
         elif sequence[c] == 'T' or sequence[c] == 't':
             matrix[c][0][3] = 1
     return matrix
+
+
+def labels_to_array(input_file):
+    array = []
+    with open(input_file, newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+        for row in spamreader:
+            if row[0] == 'A-E':
+                array.append(0)
+            if row[0] == 'I-E':
+                array.append(1)
+            if row[0] == 'A-P':
+                array.append(2)
+            if row[0] == 'I-P':
+                array.append(3)
+            if row[0] == 'A-X':
+                array.append(4)
+            if row[0] == 'I-X':
+                array.append(5)
+            if row[0] == 'UK':
+                array.append(6)
+    return array
+
+
 
 
 # Read data as fasta format and store it into a a npz archive
@@ -118,16 +143,20 @@ def conv_net(x):
     out = tf.add(tf.matmul(fcl, w), b)
     return out
 
-input_file = 'data\\bioinfo\\GM12878.fa'
-output_file = 'data\\bioinfo\\GM12878_in.npz'
+input_file = 'data\\bioinfo\\GM12878.csv'
+
+labels_to_array(input_file)
+
+# input_file = 'data\\bioinfo\\GM12878.fa'
+# output_file = 'data\\bioinfo\\GM12878_in.npz'
 
 #store_data(input_file, output_file)
 
-matrices = np.load(output_file)
-
-for m in matrices.items():
-    print(m)
-    break
+# matrices = np.load(output_file)
+#
+# for m in matrices.items():
+#     print(m)
+#     break
 
 
 #### DATASET ####
@@ -138,46 +167,46 @@ for m in matrices.items():
 # train_Y = data.train.labels
 # test_Y = data.test.labels
 
-#### HYPER-PARAMETERS ####
-training_iters = 200
-learning_rate = 0.001
-batch_size = 128
-
-
-#### NETWORK PARAMETERS ####
-n_input = 28    # MNIST data input (img shape: 28*28)
-n_classes = 2   # Number of classes to predict (output_number)
-conv_num = 3    # Number of convolution layers
-full_h_num = 2  # Number of hidden layers in the fully connected neural network at the end
-ker_r = 8       # Kernel rows number
-ker_c = 1       # Kernel columns number
-ker_ch = 4      # Kernel channels number
-ker_num = 32    # Kernel initial number
-k = 2           # MaxPool number
-
-
-#### DEFINE PLACEHOLDERS ####
-# Both placeholders are of type float and the argument filled with None refers to the batch size
-x = tf.placeholder("float", [None, 200, 1, 4])
-y = tf.placeholder("float", [None, n_classes])
-
-
-# DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-pred = conv_net(x)
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-
-
-# MODEL EVALUATION FUNCTIONS
-# Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
-# and both will be a column vector.
-correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-# Calculate accuracy across all the given images and average them out.
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-
-# INITIALIZING THE VARIABLES
-init = tf.global_variables_initializer()
+# #### HYPER-PARAMETERS ####
+# training_iters = 200
+# learning_rate = 0.001
+# batch_size = 128
+#
+#
+# #### NETWORK PARAMETERS ####
+# n_input = 28    # MNIST data input (img shape: 28*28)
+# n_classes = 2   # Number of classes to predict (output_number)
+# conv_num = 3    # Number of convolution layers
+# full_h_num = 2  # Number of hidden layers in the fully connected neural network at the end
+# ker_r = 8       # Kernel rows number
+# ker_c = 1       # Kernel columns number
+# ker_ch = 4      # Kernel channels number
+# ker_num = 32    # Kernel initial number
+# k = 2           # MaxPool number
+#
+#
+# #### DEFINE PLACEHOLDERS ####
+# # Both placeholders are of type float and the argument filled with None refers to the batch size
+# x = tf.placeholder("float", [None, 200, 1, 4])
+# y = tf.placeholder("float", [None, n_classes])
+#
+#
+# # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
+# pred = conv_net(x)
+# cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+#
+#
+# # MODEL EVALUATION FUNCTIONS
+# # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
+# # and both will be a column vector.
+# correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+# # Calculate accuracy across all the given images and average them out.
+# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+#
+#
+# # INITIALIZING THE VARIABLES
+# init = tf.global_variables_initializer()
 
 
 # # TRAINING AND TESTING THE MODEL
