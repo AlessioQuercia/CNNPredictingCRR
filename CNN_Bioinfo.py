@@ -69,7 +69,7 @@ def conv2d(x, W, b, strides=1):
     # The first 1 in strides refers to the image index and the last one refers to the image channel (in this case
     # they both need to be set to 1). SAME as padding makes sure that the kernel can process each pixel, even those
     # in the borders, by adding the needed zero-padding.
-    x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
+    x = tf.nn.conv2d(x, W, strides=[1, strides, 1, 1], padding='SAME')
     x = tf.nn.bias_add(x, b)
     return tf.nn.relu(x)
 
@@ -85,28 +85,28 @@ def conv_net(x):
     weights = {}
     biases = {}
 
-    # First Convolution Layer
-    w = tf.get_variable('WC1', shape=(8, 1, 4, 320), initializer=tf.contrib.layers.xavier_initializer())
+    # First Convolution Layer # 320 - 480 - 960
+    w = tf.get_variable('WC1', shape=(8, 1, 4, 32), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable('BC1', shape=(320), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable('BC1', shape=(32), initializer=tf.contrib.layers.xavier_initializer())
     weights["wc1"] = w
     biases["bc1"] = b
     convo1 = conv2d(x, w, b, strides=1)
     conv1 = maxpoolseq(convo1)
 
     # Second Convolution Layer
-    w = tf.get_variable('WC2', shape=(8, 1, 320, 480), initializer=tf.contrib.layers.xavier_initializer())
+    w = tf.get_variable('WC2', shape=(8, 1, 32, 64), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable('BC2', shape=(480), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable('BC2', shape=(64), initializer=tf.contrib.layers.xavier_initializer())
     weights["wc2"] = w
     biases["bc2"] = b
     convo2 = conv2d(conv1, w, b, strides=1)
     conv2 = maxpoolseq(convo2)
 
     # Third Convolution Layer
-    w = tf.get_variable('WC2', shape=(8, 1, 480, 960), initializer=tf.contrib.layers.xavier_initializer())
+    w = tf.get_variable('WC3', shape=(8, 1, 64, 128), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable('BC2', shape=(960), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable('BC3', shape=(128), initializer=tf.contrib.layers.xavier_initializer())
     weights["wc3"] = w
     biases["bc3"] = b
     convo3 = conv2d(conv2, w, b, strides=1)
@@ -124,26 +124,30 @@ def conv_net(x):
     weights["wfcin"] = w
     biases["bfcin"] = b
     # Reshape into 1D
-    fcl = tf.reshape(conv3, [-1, weights["wfcin"].get_shape().as_list()[0]])
-    fcl = tf.add(tf.matmul(fcl, w), b)
-    fcl = tf.nn.relu(fcl)
+    hid_1 = tf.reshape(conv3, [-1, weights["wfcin"].get_shape().as_list()[0]])
+    hid_1 = tf.add(tf.matmul(hid_1, w), b)
+    hid_1 = tf.nn.relu(hid_1)
 
     # First Fully Connected Hidden Layer
     # Weights Layer
     w = tf.get_variable("WFCH1", shape=(dim_ch, dim_ch), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
     b = tf.get_variable("BFCH1", shape=(dim_ch), initializer=tf.contrib.layers.xavier_initializer())
+    weights["wfch1"] = w
+    biases["bfch1"] = b
+    hid_2 = tf.add(tf.matmul(hid_1, w), b)
+    hid_2 = tf.nn.relu(hid_2)
 
     # Fully Connected Output Layer
     # Weights Layer
-    w = tf.get_variable("WFCOUT", shape=(dim_ch, 2), initializer=tf.contrib.layers.xavier_initializer())
+    w = tf.get_variable("WFCOUT", shape=(dim_ch, n_classes), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable("BFCOUT", shape=(2), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable("BFCOUT", shape=(n_classes), initializer=tf.contrib.layers.xavier_initializer())
     weights["wfcout"] = w
     biases["bfcout"] = b
 
     # Fully Connected Output Layer: Class Prediction
-    out = tf.add(tf.matmul(fcl, w), b)
+    out = tf.add(tf.matmul(hid_2, w), b)
     return out
 
 # input_file = 'data\\bioinfo\\GM12878.csv'
@@ -193,93 +197,85 @@ data_Y=np.array(data_Y)
 print(data_X.shape)
 print(data_Y.shape)
 
-X_train, X_test, Y_train, Y_test = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
+train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
 
-X_train = np.array(X_train)
-X_test = np.array(X_test)
-Y_train = np.array(Y_train)
-Y_test = np.array(Y_test)
+train_X = np.array(train_X)
+test_X = np.array(test_X)
+train_Y = np.array(train_Y)
+test_Y = np.array(test_Y)
 
-print(X_train.shape)
-print(Y_train.shape)
-print(X_test.shape)
-print(Y_test.shape)
+print(train_X.shape)
+print(train_Y.shape)
+print(test_X.shape)
+print(test_Y.shape)
 
-
-# # Reshape training and testing image
-# train_X = data.train.images.reshape(-1, 28, 28, 1)
-# test_X = data.test.images.reshape(-1, 28, 28, 1)
-#
-# train_Y = data.train.labels
-# test_Y = data.test.labels
-
-# #### HYPER-PARAMETERS ####
-# training_iters = 200
-# learning_rate = 0.001
-# batch_size = 128
-#
-#
-# #### NETWORK PARAMETERS ####
-# n_input = 28    # MNIST data input (img shape: 28*28)
-# n_classes = 2   # Number of classes to predict (output_number)
-# conv_num = 3    # Number of convolution layers
-# full_h_num = 2  # Number of hidden layers in the fully connected neural network at the end
-# ker_r = 8       # Kernel rows number
-# ker_c = 1       # Kernel columns number
-# ker_ch = 4      # Kernel channels number
-# ker_num = 32    # Kernel initial number
-# k = 2           # MaxPool number
-#
-#
-# #### DEFINE PLACEHOLDERS ####
-# # Both placeholders are of type float and the argument filled with None refers to the batch size
-# x = tf.placeholder("float", [None, 200, 1, 4])
-# y = tf.placeholder("float", [None, n_classes])
-#
-#
-# # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-# pred = conv_net(x)
-# cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-#
-#
-# # MODEL EVALUATION FUNCTIONS
-# # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
-# # and both will be a column vector.
-# correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-# # Calculate accuracy across all the given images and average them out.
-# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-#
-#
-# # INITIALIZING THE VARIABLES
-# init = tf.global_variables_initializer()
+#### HYPER-PARAMETERS ####
+training_iters = 200
+learning_rate = 0.001
+batch_size = 128
 
 
-# # TRAINING AND TESTING THE MODEL
-# with tf.Session() as sess:
-#     sess.run(init)
-#     train_loss = []
-#     test_loss = []
-#     train_accuracy = []
-#     test_accuracy = []
-#     summary_writer = tf.summary.FileWriter('./Output', sess.graph)
-#     for i in range(training_iters):
-#         for batch in range(len(train_X)//batch_size):
-#             batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
-#             batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
-#             # Run optimization op (backprop).
-#                 # Calculate batch loss and accuracy
-#             opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-#             loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
-#         print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
-#         #print("Optimization Finished!")
-#
-#
-#         # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
-#         test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
-#         train_loss.append(loss)
-#         test_loss.append(valid_loss)
-#         train_accuracy.append(acc)
-#         test_accuracy.append(test_acc)
-#         print("Test Error: " + "{:.6f}".format(valid_loss) + ", Training Accuracy: " + "{:.5f}".format(test_acc) + "\n")
-#     summary_writer.close()
+#### NETWORK PARAMETERS ####
+n_input = 28    # MNIST data input (img shape: 28*28)
+n_classes = 7   # Number of classes to predict (output_number)
+conv_num = 3    # Number of convolution layers
+full_h_num = 2  # Number of hidden layers in the fully connected neural network at the end
+ker_r = 8       # Kernel rows number
+ker_c = 1       # Kernel columns number
+ker_ch = 4      # Kernel channels number
+ker_num = 32    # Kernel initial number
+k = 2           # MaxPool number
+
+
+#### DEFINE PLACEHOLDERS ####
+# Both placeholders are of type float and the argument filled with None refers to the batch size
+x = tf.placeholder("float", [None, 200, 1, 4])
+y = tf.placeholder("float", [None, n_classes])
+
+
+# DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
+pred = conv_net(x)
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+
+# MODEL EVALUATION FUNCTIONS
+# Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
+# and both will be a column vector.
+correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+# Calculate accuracy across all the given images and average them out.
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+
+# INITIALIZING THE VARIABLES
+init = tf.global_variables_initializer()
+
+
+# TRAINING AND TESTING THE MODEL
+with tf.Session() as sess:
+    sess.run(init)
+    train_loss = []
+    test_loss = []
+    train_accuracy = []
+    test_accuracy = []
+    summary_writer = tf.summary.FileWriter('./Output', sess.graph)
+    for i in range(training_iters):
+        for batch in range(len(train_X)//batch_size):
+            batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
+            batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
+            # Run optimization op (backprop).
+                # Calculate batch loss and accuracy
+            opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+            loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
+        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
+        #print("Optimization Finished!")
+
+
+        # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
+        test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
+        train_loss.append(loss)
+        test_loss.append(valid_loss)
+        train_accuracy.append(acc)
+        test_accuracy.append(test_acc)
+        print("Test Error: " + "{:.6f}".format(valid_loss) + ", Training Accuracy: " + "{:.5f}".format(test_acc) + "\n")
+    summary_writer.close()
