@@ -4,6 +4,18 @@ import tensorflow as tf
 import csv
 from sklearn.model_selection import train_test_split
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0" #for training on gpu
+
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+tf.logging.set_verbosity(tf.logging.ERROR)
+
 
 # Convert a sequence to its One Hot Encoding representation
 def to_OHE(sequence):
@@ -177,9 +189,9 @@ def conv_net(x):
 
     # Fully Connected Output Layer
     # Weights Layer
-    w = tf.get_variable("WFCOUT", shape=(dim_ch, 7), initializer=tf.contrib.layers.xavier_initializer())
+    w = tf.get_variable("WFCOUT", shape=(dim_ch, 1), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable("BFCOUT", shape=(7), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable("BFCOUT", shape=(1), initializer=tf.contrib.layers.xavier_initializer())
     weights["wfcout"] = w
     biases["bfcout"] = b
 
@@ -188,43 +200,43 @@ def conv_net(x):
     return out
 
 
-# input_file = 'data\\bioinfo\\GM12878.fa'
-# output_file = 'data\\bioinfo\\GM12878_in.npz'
-
-input_files = ["data\\bioinfo\\GM12878.fa", "data\\bioinfo\\HelaS3.fa",
-               "data\\bioinfo\\HepG2.fa", "data\\bioinfo\\K562.fa"]
-
-output_file = 'data\\bioinfo\\data_all.npz'
-
-store_multiple_data(*input_files, output_file=output_file)
-
-# input_file = 'data\\bioinfo\\GM12878.csv'
-# output_file = 'data\\bioinfo\\GM12878_in.npy'
-
-input_files = ["data\\bioinfo\\GM12878.csv", "data\\bioinfo\\HelaS3.csv",
-               "data\\bioinfo\\HepG2.csv", "data\\bioinfo\\K562.csv"]
-
-data_Y = multiple_labels_to_array(*input_files)
-
-input_file = "data\\bioinfo\\data_all.npz"
-
-matrices = np.load(input_file)
-
-data_X = []
-
-for m in matrices.items():
-    data_X.append(m[1])
-
-data_X = np.array(data_X)
-
-print(data_X.shape)
-print(data_Y.shape)
-
-data_list = []
-data_list.append(data_X)
-data_list.append(data_Y)
-output_file = 'data\\bioinfo\\dataset.npz'
-np.savez(output_file, *data_list)
+# # input_file = 'data\\bioinfo\\GM12878.fa'
+# # output_file = 'data\\bioinfo\\GM12878_in.npz'
+#
+# input_files = ["data\\bioinfo\\GM12878.fa", "data\\bioinfo\\HelaS3.fa",
+#                "data\\bioinfo\\HepG2.fa", "data\\bioinfo\\K562.fa"]
+#
+# output_file = 'data\\bioinfo\\data_all.npz'
+#
+# store_multiple_data(*input_files, output_file=output_file)
+#
+# # input_file = 'data\\bioinfo\\GM12878.csv'
+# # output_file = 'data\\bioinfo\\GM12878_in.npy'
+#
+# input_files = ["data\\bioinfo\\GM12878.csv", "data\\bioinfo\\HelaS3.csv",
+#                "data\\bioinfo\\HepG2.csv", "data\\bioinfo\\K562.csv"]
+#
+# data_Y = multiple_labels_to_array(*input_files)
+#
+# input_file = "data\\bioinfo\\data_all.npz"
+#
+# matrices = np.load(input_file)
+#
+# data_X = []
+#
+# for m in matrices.items():
+#     data_X.append(m[1])
+#
+# data_X = np.array(data_X)
+#
+# print(data_X.shape)
+# print(data_Y.shape)
+#
+# data_list = []
+# data_list.append(data_X)
+# data_list.append(data_Y)
+# output_file = 'data\\bioinfo\\dataset.npz'
+# np.savez(output_file, *data_list)
 
 
 # #### DATASET ####
@@ -245,85 +257,178 @@ np.savez(output_file, *data_list)
 # print(data_X.shape)
 # print(data_Y.shape)
 #
-# train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
+# data_X_AEAP = []
+# data_Y_AEAP = []
 #
-# train_X = np.array(train_X)
-# test_X = np.array(test_X)
-# train_Y = np.array(train_Y)
-# test_Y = np.array(test_Y)
+# data_X_AEIE = []
+# data_Y_AEIE = []
 #
-# print(train_X.shape)
-# print(train_Y.shape)
-# print(test_X.shape)
-# print(test_Y.shape)
+# data_X_APIP = []
+# data_Y_APIP = []
+#
+# data_X_IEIP = []
+# data_Y_IEIP = []
+#
+# print(data_X.shape[0])
+#
+# #### TASK SUBDIVISION ####
+# for i in range(data_X.shape[0]):
+#     if data_Y[i][0] == 1:               # AE - 0
+#         data_X_AEAP.append(data_X[i])
+#         data_Y_AEAP.append(np.array([0]))
+#         data_X_AEIE.append(data_X[i])
+#         data_Y_AEIE.append(np.array([0]))
+#     elif data_Y[i][2] == 1:             # AP - 2
+#         data_X_AEAP.append(data_X[i])
+#         data_Y_AEAP.append(np.array([1]))
+#         data_X_APIP.append(data_X[i])
+#         data_Y_APIP.append(np.array([0]))
+#     elif data_Y[i][1] == 1:             # IE - 1
+#         data_X_AEIE.append(data_X[i])
+#         data_Y_AEIE.append(np.array([1]))
+#         data_X_IEIP.append(data_X[i])
+#         data_Y_IEIP.append(np.array([0]))
+#     elif data_Y[i][3] == 1:             # IP - 3
+#         data_X_APIP.append(data_X[i])
+#         data_Y_APIP.append(np.array([1]))
+#         data_X_IEIP.append(data_X[i])
+#         data_Y_IEIP.append(np.array([1]))
+#
+# data_X_AEAP = np.array(data_X_AEAP)
+# data_Y_AEAP = np.array(data_Y_AEAP)
+#
+# data_X_AEIE = np.array(data_X_AEIE)
+# data_Y_AEIE = np.array(data_Y_AEIE)
+#
+# data_X_APIP = np.array(data_X_APIP)
+# data_Y_APIP = np.array(data_Y_APIP)
+#
+# data_X_IEIP = np.array(data_X_IEIP)
+# data_Y_IEIP = np.array(data_Y_IEIP)
+#
+# print(data_X_AEAP.shape)
+# print(data_Y_AEAP.shape)
+#
+# data_list = []
+# data_list.append(data_X_AEAP)
+# data_list.append(data_Y_AEAP)
+# output_file = 'data\\bioinfo\\GM12878_AEAP.npz'
+# np.savez(output_file, *data_list)
+#
+# print(data_X_AEIE.shape)
+# print(data_Y_AEIE.shape)
+#
+# data_list = []
+# data_list.append(data_X_AEIE)
+# data_list.append(data_Y_AEIE)
+# output_file = 'data\\bioinfo\\GM12878_AEIE.npz'
+# np.savez(output_file, *data_list)
+#
+#
+# print(data_X_APIP.shape)
+# print(data_Y_APIP.shape)
+#
+# data_list = []
+# data_list.append(data_X_APIP)
+# data_list.append(data_Y_APIP)
+# output_file = 'data\\bioinfo\\GM12878_APIP.npz'
+# np.savez(output_file, *data_list)
+#
+#
+# print(data_X_IEIP.shape)
+# print(data_Y_IEIP.shape)
+#
+# data_list = []
+# data_list.append(data_X_IEIP)
+# data_list.append(data_Y_IEIP)
+# output_file = 'data\\bioinfo\\GM12878_IEIP.npz'
+# np.savez(output_file, *data_list)
 
-# #### HYPER-PARAMETERS ####
-# training_iters = 200
-# learning_rate = 0.001
-# batch_size = 128
-#
-#
-# #### NETWORK PARAMETERS ####
-# n_input = 28    # MNIST data input (img shape: 28*28)
-# n_classes = 7   # Number of classes to predict (output_number)
-# conv_num = 3    # Number of convolution layers
-# full_h_num = 2  # Number of hidden layers in the fully connected neural network at the end
-# ker_r = 8       # Kernel rows number
-# ker_c = 1       # Kernel columns number
-# ker_ch = 4      # Kernel channels number
-# ker_num = 32    # Kernel initial number
-# k = 2           # MaxPool number
-#
-#
-# #### DEFINE PLACEHOLDERS ####
-# # Both placeholders are of type float and the argument filled with None refers to the batch size
-# x = tf.placeholder("float", [None, 200, 1, 4])
-# y = tf.placeholder("float", [None, n_classes])
-#
-#
-# # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-# pred = conv_net(x)
-# cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
-# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-#
-#
-# # MODEL EVALUATION FUNCTIONS
+input_file = 'data\\bioinfo\\GM12878_AEAP.npz'
+data_dict = np.load(input_file)
+for k,v in data_dict.items():
+    if k == "arr_0":
+        data_X=v
+    if k == "arr_1":
+        data_Y=v
+data_X=np.array(data_X)
+data_Y=np.array(data_Y)
+print(data_X.shape)
+print(data_Y.shape)
+
+train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
+
+train_X = np.array(train_X)
+test_X = np.array(test_X)
+train_Y = np.array(train_Y)
+test_Y = np.array(test_Y)
+
+print(train_X.shape)
+print(train_Y.shape)
+print(test_X.shape)
+print(test_Y.shape)
+
+#### HYPER-PARAMETERS ####
+training_iters = 200
+learning_rate = 0.001
+batch_size = 128
+
+
+#### NETWORK PARAMETERS ####
+n_classes = 1   # Number of classes to predict (output_number)
+
+
+#### DEFINE PLACEHOLDERS ####
+# Both placeholders are of type float and the argument filled with None refers to the batch size
+x = tf.placeholder("float", [None, 200, 1, 4])
+y = tf.placeholder("float", [None, n_classes])
+
+
+# DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
+pred = conv_net(x)
+cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+
+# MODEL EVALUATION FUNCTIONS
 # # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
 # # and both will be a column vector.
 # correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
 # # Calculate accuracy across all the given images and average them out.
 # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-#
-#
-# # INITIALIZING THE VARIABLES
-# init = tf.global_variables_initializer()
-#
-#
-# # TRAINING AND TESTING THE MODEL
-# with tf.Session() as sess:
-#     sess.run(init)
-#     train_loss = []
-#     test_loss = []
-#     train_accuracy = []
-#     test_accuracy = []
-#     summary_writer = tf.summary.FileWriter('./Output', sess.graph)
-#     for i in range(training_iters):
-#         for batch in range(len(train_X)//batch_size):
-#             batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
-#             batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
-#             # Run optimization op (backprop).
-#                 # Calculate batch loss and accuracy
-#             opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-#             loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
-#         print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
-#         #print("Optimization Finished!")
-#
-#
-#         # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
-#         test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
-#         train_loss.append(loss)
-#         test_loss.append(valid_loss)
-#         train_accuracy.append(acc)
-#         test_accuracy.append(test_acc)
-#         print("Test Error: " + "{:.6f}".format(valid_loss) + ", Training Accuracy: " + "{:.5f}".format(test_acc) + "\n")
-#     summary_writer.close()
+
+accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
+
+# INITIALIZING THE VARIABLES
+init = tf.global_variables_initializer()
+
+
+# TRAINING AND TESTING THE MODEL
+with tf.Session() as sess:
+    sess.run(init)
+    train_loss = []
+    test_loss = []
+    train_accuracy = []
+    test_accuracy = []
+    summary_writer = tf.summary.FileWriter('./Output', sess.graph)
+    for i in range(training_iters):
+        for batch in range(len(train_X)//batch_size):
+            batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
+            batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
+            # Run optimization op (backprop).
+                # Calculate batch loss and accuracy
+            opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+            loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
+            # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
+        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
+        #print("Optimization Finished!")
+
+
+        # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
+        test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
+        train_loss.append(loss)
+        test_loss.append(valid_loss)
+        train_accuracy.append(acc)
+        test_accuracy.append(test_acc)
+        print("Test Error: " + "{:.6f}".format(valid_loss) + ", Test Accuracy: " + "{:.5f}".format(test_acc) + "\n")
+    summary_writer.close()
