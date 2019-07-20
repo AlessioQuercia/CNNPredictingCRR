@@ -45,6 +45,29 @@ def labels_to_array(input_file):
     return np.array(matrix)
 
 
+def multiple_labels_to_array(*input_files):
+    matrix = []
+    for input_file in input_files:
+        with open(input_file, newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            for row in spamreader:
+                array = np.zeros(7)
+                if row[0] == 'A-E':
+                    array[0] = 1
+                if row[0] == 'I-E':
+                    array[1] = 1
+                if row[0] == 'A-P':
+                    array[2] = 1
+                if row[0] == 'I-P':
+                    array[3] = 1
+                if row[0] == 'A-X':
+                    array[4] = 1
+                if row[0] == 'I-X':
+                    array[5] = 1
+                if row[0] == 'UK':
+                    array[6] = 1
+                matrix.append(array)
+    return np.array(matrix)
 
 
 # Read data as fasta format and store it into a a npz archive
@@ -154,9 +177,9 @@ def conv_net(x):
 
     # Fully Connected Output Layer
     # Weights Layer
-    w = tf.get_variable("WFCOUT", shape=(dim_ch, n_classes), initializer=tf.contrib.layers.xavier_initializer())
+    w = tf.get_variable("WFCOUT", shape=(dim_ch, 7), initializer=tf.contrib.layers.xavier_initializer())
     # Bias Layer
-    b = tf.get_variable("BFCOUT", shape=(n_classes), initializer=tf.contrib.layers.xavier_initializer())
+    b = tf.get_variable("BFCOUT", shape=(7), initializer=tf.contrib.layers.xavier_initializer())
     weights["wfcout"] = w
     biases["bfcout"] = b
 
@@ -173,34 +196,35 @@ input_files = ["data\\bioinfo\\GM12878.fa", "data\\bioinfo\\HelaS3.fa",
 
 output_file = 'data\\bioinfo\\data_all.npz'
 
-store_multiple_data(input_files, output_file)
-
-# input_files = ["data\\bioinfo\\GM12878.csv", "data\\bioinfo\\HelaS3.csv",
-#                "data\\bioinfo\\HepG2.csv", "data\\bioinfo\\K562.csv"]
+store_multiple_data(*input_files, output_file=output_file)
 
 # input_file = 'data\\bioinfo\\GM12878.csv'
 # output_file = 'data\\bioinfo\\GM12878_in.npy'
-#
-# data_Y = labels_to_array(input_file)
-#
 
-# matrices = np.load(output_file)
-#
-# data_X = []
-#
-# for m in matrices.items():
-#     data_X.append(m[1])
-#
-# data_X = np.array(data_X)
-#
-# print(data_X.shape)
-# print(data_Y.shape)
-#
-# data_list = []
-# data_list.append(data_X)
-# data_list.append(data_Y)
-# output_file = 'data\\bioinfo\\GM12878_data.npz'
-# np.savez(output_file, *data_list)
+input_files = ["data\\bioinfo\\GM12878.csv", "data\\bioinfo\\HelaS3.csv",
+               "data\\bioinfo\\HepG2.csv", "data\\bioinfo\\K562.csv"]
+
+data_Y = multiple_labels_to_array(*input_files)
+
+input_file = "data\\bioinfo\\data_all.npz"
+
+matrices = np.load(input_file)
+
+data_X = []
+
+for m in matrices.items():
+    data_X.append(m[1])
+
+data_X = np.array(data_X)
+
+print(data_X.shape)
+print(data_Y.shape)
+
+data_list = []
+data_list.append(data_X)
+data_list.append(data_Y)
+output_file = 'data\\bioinfo\\dataset.npz'
+np.savez(output_file, *data_list)
 
 
 # #### DATASET ####
