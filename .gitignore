@@ -1,11 +1,8 @@
 Output/
 Input/
 .idea/
-data/bioinfo/GM12878_AEAP.npz
-data/bioinfo/GM12878_AEIE.npz
-data/bioinfo/GM12878_APIP.npz
-data/bioinfo/GM12878_IEIP.npz
 data/bioinfo/GM12878_data.npz
+data/bioinfo/tasks/
 data/fashion/
 data/mnist/
 CNN.py

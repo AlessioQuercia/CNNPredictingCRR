@@ -372,104 +372,108 @@ def conv_net(x):
 # output_file = 'data\\bioinfo\\dataset.npz'
 # np.savez(output_file, *data_list)
 
-data_input_file = 'data\\bioinfo\\HelaS3.fa'
+# ###### GENERATE DATASETS ######
+#
+# data_input_file = 'data\\bioinfo\\HelaS3.fa'
+#
+# labels_input_file = 'data\\bioinfo\\HelaS3.csv'
+#
+# output_file = 'data\\bioinfo\\HelaS3_data.npz'
+#
+# generate_dataset(data_input_file, labels_input_file, output_file)
+#
+# output_files = ['data\\bioinfo\\HelaS3_AEAP.npz', 'data\\bioinfo\\HelaS3_AEIE.npz',
+#                 'data\\bioinfo\\HelaS3_APIP.npz', 'data\\bioinfo\\HelaS3_IEIP.npz']
+#
+# generate_dataset_tasks(output_file, *output_files)
 
-labels_input_file = 'data\\bioinfo\\HelaS3.csv'
 
-output_file = 'data\\bioinfo\\HelaS3_data.npz'
 
-generate_dataset(data_input_file, labels_input_file, output_file)
+input_file = 'data\\bioinfo\\GM12878_AEAP.npz'
+data_dict = np.load(input_file)
+for k,v in data_dict.items():
+    if k == "arr_0":
+        data_X=v
+    if k == "arr_1":
+        data_Y=v
+data_X=np.array(data_X)
+data_Y=np.array(data_Y)
+print(data_X.shape)
+print(data_Y.shape)
 
-output_files = ['data\\bioinfo\\HelaS3_AEAP.npz', 'data\\bioinfo\\HelaS3_AEIE.npz',
-                'data\\bioinfo\\HelaS3_APIP.npz', 'data\\bioinfo\\HelaS3_IEIP.npz']
+train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
 
-generate_dataset_tasks(output_file, *output_files)
+train_X = np.array(train_X)
+test_X = np.array(test_X)
+train_Y = np.array(train_Y)
+test_Y = np.array(test_Y)
 
-# input_file = 'data\\bioinfo\\GM12878_AEAP.npz'
-# data_dict = np.load(input_file)
-# for k,v in data_dict.items():
-#     if k == "arr_0":
-#         data_X=v
-#     if k == "arr_1":
-#         data_Y=v
-# data_X=np.array(data_X)
-# data_Y=np.array(data_Y)
-# print(data_X.shape)
-# print(data_Y.shape)
-#
-# train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
-#
-# train_X = np.array(train_X)
-# test_X = np.array(test_X)
-# train_Y = np.array(train_Y)
-# test_Y = np.array(test_Y)
-#
-# print(train_X.shape)
-# print(train_Y.shape)
-# print(test_X.shape)
-# print(test_Y.shape)
-#
-# #### HYPER-PARAMETERS ####
-# training_iters = 200
-# learning_rate = 0.001
-# batch_size = 128
-#
-#
-# #### NETWORK PARAMETERS ####
-# n_classes = 1   # Number of classes to predict (output_number)
-#
-#
-# #### DEFINE PLACEHOLDERS ####
-# # Both placeholders are of type float and the argument filled with None refers to the batch size
-# x = tf.placeholder("float", [None, 200, 1, 4])
-# y = tf.placeholder("float", [None, n_classes])
-#
-#
-# # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-# pred = conv_net(x)
-# cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
-# optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-#
-#
-# # MODEL EVALUATION FUNCTIONS
-# # # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
-# # # and both will be a column vector.
-# # correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-# # # Calculate accuracy across all the given images and average them out.
-# # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-#
-# accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
-#
-# # INITIALIZING THE VARIABLES
-# init = tf.global_variables_initializer()
-#
-#
-# # TRAINING AND TESTING THE MODEL
-# with tf.Session() as sess:
-#     sess.run(init)
-#     train_loss = []
-#     test_loss = []
-#     train_accuracy = []
-#     test_accuracy = []
-#     summary_writer = tf.summary.FileWriter('./Output', sess.graph)
-#     for i in range(training_iters):
-#         for batch in range(len(train_X)//batch_size):
-#             batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
-#             batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
-#             # Run optimization op (backprop).
-#                 # Calculate batch loss and accuracy
-#             opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-#             loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
-#             # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
-#         print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
-#         #print("Optimization Finished!")
-#
-#
-#         # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
-#         test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
-#         train_loss.append(loss)
-#         test_loss.append(valid_loss)
-#         train_accuracy.append(acc)
-#         test_accuracy.append(test_acc)
-#         print("Test Error: " + "{:.6f}".format(valid_loss) + ", Test Accuracy: " + "{:.5f}".format(test_acc) + "\n")
-#     summary_writer.close()
+print(train_X.shape)
+print(train_Y.shape)
+print(test_X.shape)
+print(test_Y.shape)
+
+#### HYPER-PARAMETERS ####
+training_iters = 200
+learning_rate = 0.001
+batch_size = 128
+
+
+#### NETWORK PARAMETERS ####
+n_classes = 1   # Number of classes to predict (output_number)
+
+
+#### DEFINE PLACEHOLDERS ####
+# Both placeholders are of type float and the argument filled with None refers to the batch size
+x = tf.placeholder("float", [None, 200, 1, 4])
+y = tf.placeholder("float", [None, n_classes])
+
+
+# DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
+pred = conv_net(x)
+cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+
+# MODEL EVALUATION FUNCTIONS
+# # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
+# # and both will be a column vector.
+# correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+# # Calculate accuracy across all the given images and average them out.
+# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
+
+# INITIALIZING THE VARIABLES
+init = tf.global_variables_initializer()
+
+
+# TRAINING AND TESTING THE MODEL
+with tf.Session() as sess:
+    sess.run(init)
+    train_loss = []
+    test_loss = []
+    train_accuracy = []
+    test_accuracy = []
+    summary_writer = tf.summary.FileWriter('./Output', sess.graph)
+    for i in range(training_iters):
+        for batch in range(len(train_X)//batch_size):
+            batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
+            batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
+            # Run optimization op (backprop).
+                # Calculate batch loss and accuracy
+            opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+            loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
+            # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
+        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
+        #print("Optimization Finished!")
+
+
+        # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
+        test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
+        train_loss.append(loss)
+        test_loss.append(valid_loss)
+        train_accuracy.append(acc)
+        test_accuracy.append(test_acc)
+        print("Test Error: " + "{:.6f}".format(valid_loss) + ", Test Accuracy: " + "{:.5f}".format(test_acc) + "\n")
+    summary_writer.close()
