@@ -3,6 +3,8 @@ import numpy as np
 import tensorflow as tf
 import csv
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import auc, roc_curve, precision_recall_curve
+import matplotlib.pyplot as plt
 
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0" #for training on gpu
@@ -15,6 +17,22 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0" #for training on gpu
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 tf.logging.set_verbosity(tf.logging.ERROR)
+
+
+def compute_TPR(TP, FN):
+    return TP/(TP + FN)
+
+
+def compute_FPR(FP, TN):
+    return FP/(FP + TN)
+
+
+def compute_precision(TP, FP):
+    return TP/(TP+FP)
+
+
+def compute_recall(TP, FN):
+    return TP/(TP + FN)
 
 
 # Convert a sequence to its One Hot Encoding representation
@@ -334,6 +352,62 @@ def conv_net(x):
     return out
 
 
+def depict_ROC_curve(label, color, filename, fpr, tpr, auc, randomline=True):
+    """
+    :type color: string (hex color code)
+    :type fname: string
+    :type randomline: boolean
+    """
+
+    plt.figure(figsize=(4, 4), dpi=80)
+
+    setup_ROC_curve_plot(plt)
+    add_ROC_curve(plt, color, label, tpr, fpr, auc)
+    save_ROC_curve_plot(plt, filename, randomline)
+
+
+def setup_ROC_curve_plot(plt):
+    """
+    :type plt: matplotlib.pyplot
+    """
+
+    plt.xlabel("FPR", fontsize=14)
+    plt.ylabel("TPR", fontsize=14)
+    plt.title("ROC Curve", fontsize=14)
+
+
+def add_ROC_curve(plt, color, label, tpr, fpr, auc):
+    """
+    :type plt: matplotlib.pyplot
+    :type actives: list[sting]
+    :type scores: list[tuple(string, float)]
+    :type color: string (hex color code)
+    :type label: string
+    """
+
+    roc_label = '({} ={:.3f})'.format(label, auc)
+    plt.plot(fpr, tpr, color=color, linewidth=2, label=roc_label)
+
+
+def save_ROC_curve_plot(plt, filename, randomline=True):
+    """
+    :type plt: matplotlib.pyplot
+    :type fname: string
+    :type randomline: boolean
+    """
+
+    if randomline:
+        x = [0.0, 1.0]
+        plt.plot(x, x, linestyle='dashed', color='red', linewidth=2, label='random')
+
+    plt.xlim(0.0, 1.0)
+    plt.ylim(0.0, 1.0)
+    plt.legend(fontsize=10, loc='best')
+    plt.tight_layout()
+    plt.savefig(filename)
+
+
+
 # # input_file = 'data\\bioinfo\\GM12878.fa'
 # # output_file = 'data\\bioinfo\\GM12878_in.npz'
 #
@@ -389,7 +463,7 @@ def conv_net(x):
 
 
 
-input_file = 'data\\bioinfo\\GM12878_AEAP.npz'
+input_file = 'data\\bioinfo\\tasks\\GM12878_AEAP.npz'
 data_dict = np.load(input_file)
 for k,v in data_dict.items():
     if k == "arr_0":
@@ -414,7 +488,7 @@ print(test_X.shape)
 print(test_Y.shape)
 
 #### HYPER-PARAMETERS ####
-training_iters = 200
+training_iters = 20
 learning_rate = 0.001
 batch_size = 128
 
@@ -443,37 +517,137 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
+_, auroc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='ROC', name="AUROC")
+_, auprc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='PR', name="AUPRC")
+_, tp_mes = tf.metrics.true_positives(y, tf.round(tf.sigmoid(pred)))
+_, tn_mes = tf.metrics.true_negatives(y, tf.round(tf.sigmoid(pred)))
+_, fp_mes = tf.metrics.false_positives(y, tf.round(tf.sigmoid(pred)))
+_, fn_mes = tf.metrics.false_negatives(y, tf.round(tf.sigmoid(pred)))
 
 # INITIALIZING THE VARIABLES
 init = tf.global_variables_initializer()
+init_local = tf.local_variables_initializer()
+tvars = tf.local_variables()
 
+
+# AUROC
+tpr_list = []
+fpr_list = []
+auroc_list = []
+
+# AUPRC
+p_list = []
+r_list = []
+auprc_list = []
 
 # TRAINING AND TESTING THE MODEL
 with tf.Session() as sess:
     sess.run(init)
+    sess.run(init_local)
     train_loss = []
     test_loss = []
     train_accuracy = []
     test_accuracy = []
+    train_auroc = []
+    test_auroc = []
+    train_auprc = []
+    test_auprc = []
+    y_preds = []
+    y_trues = []
     summary_writer = tf.summary.FileWriter('./Output', sess.graph)
     for i in range(training_iters):
+        # sess.run(tf.local_variables_initializer())
         for batch in range(len(train_X)//batch_size):
             batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
             batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
             # Run optimization op (backprop).
                 # Calculate batch loss and accuracy
             opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-            loss, acc = sess.run([cost, accuracy], feed_dict={x: batch_x, y: batch_y})
+            loss, acc, auroc, auprc = sess.run([cost, accuracy, auroc_mes, auprc_mes], feed_dict={x: batch_x, y: batch_y})
             # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
-        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.5f}".format(acc))
+        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.6f}".format(acc))
+
         #print("Optimization Finished!")
 
+        sess.run(tf.local_variables_initializer())
 
-        # Calculate accuracy and loss for the test set (for all 10000 mnist test images)
-        test_acc,valid_loss = sess.run([accuracy,cost], feed_dict={x: test_X,y : test_Y})
-        train_loss.append(loss)
-        test_loss.append(valid_loss)
-        train_accuracy.append(acc)
-        test_accuracy.append(test_acc)
-        print("Test Error: " + "{:.6f}".format(valid_loss) + ", Test Accuracy: " + "{:.5f}".format(test_acc) + "\n")
+        y_pred, y_true, tp, tn, fp, fn, test_acc,test_loss, test_auroc, test_auprc = \
+            sess.run([tf.round(tf.nn.sigmoid(pred)), y, tp_mes, tn_mes, fp_mes, fn_mes, accuracy, cost, auroc_mes, auprc_mes],
+                     feed_dict={x: test_X,y : test_Y})
+
+        y_preds.append(y_pred)
+        y_trues.append(y_true)
+
+        print(test_X.shape, tp, tn, fp, fn, compute_TPR(tp, fn), compute_FPR(fp, tn), compute_precision(tp, fp), compute_recall(tp, fn))
+
+        print("Test Error: " + "{:.6f}".format(test_loss) + ", Test Accuracy: " + "{:.6f}".format(test_acc)
+              + ", Test AUROC: " + "{:.6f}".format(test_auroc) + ", Test AUPRC: " + "{:.6f}".format(test_auprc) + "\n")
+
+        # print(sess.run([tf.round(tf.nn.sigmoid(pred)), y], feed_dict={x: batch_x, y: batch_y}))
+        # print(roc_curve(sess.run(y, feed_dict={x: test_X,y : test_Y}), sess.run(tf.round(tf.nn.sigmoid(pred)))))
+
+        # tpr_list.append(compute_TPR(tp, fn))
+        # fpr_list.append(compute_FPR(fp, tn))
+        # auroc_list.append(test_auroc)
+        # p_list.append(compute_precision(tp, fp))
+        # r_list.append(compute_recall(tp, fn))
+        # auprc_list.append(test_auprc)
+
+        # train_loss.append(loss)
+        # test_loss.append(test_loss)
+        # train_accuracy.append(acc)
+        # test_accuracy.append(test_acc)
+        # train_auroc.append(auroc)
+        # test_auroc.append(test_auroc)
+        # train_auprc.append(auprc)
+        # test_auprc.append(test_auprc)
     summary_writer.close()
+
+# print(auc(fpr_list, tpr_list))
+fpr_list = []
+tpr_list = []
+fpr_list.append(0.0)
+tpr_list.append(0.0)
+
+for i in range(len(y_preds)):
+    print(roc_curve(y_trues[i], y_preds[i]))
+    fpr_list.append(roc_curve(y_trues[i], y_preds[i])[0][1])
+    tpr_list.append(roc_curve(y_trues[i], y_preds[i])[1][1])
+
+tpr_list.append(1.0)
+fpr_list.append(1.0)
+
+fpr_list, tpr_list = zip(*sorted(zip(fpr_list, tpr_list)))
+
+fpr_list, tpr_list = (list(t) for t in zip(*sorted(zip(fpr_list, tpr_list))))
+
+print(fpr_list)
+print(tpr_list)
+
+auroc = auc(fpr_list, tpr_list)
+
+r_list = []
+p_list = []
+r_list.append(0.0)
+p_list.append(1.0)
+
+for i in range(len(y_preds)):
+    print(precision_recall_curve(y_trues[i], y_preds[i]))
+    r_list.append(precision_recall_curve(y_trues[i], y_preds[i])[1][1])
+    p_list.append(precision_recall_curve(y_trues[i], y_preds[i])[0][1])
+
+r_list, p_list = zip(*sorted(zip(r_list, p_list)))
+
+r_list, p_list = (list(t) for t in zip(*sorted(zip(r_list, p_list))))
+
+r_list.append(1.0)
+p_list.append(0.0)
+
+print(r_list)
+print(p_list)
+
+auprc = auc(r_list, p_list)
+
+depict_ROC_curve("AUROC", 'blue', "auroc_plot", fpr_list, tpr_list, auroc, False)
+
+depict_ROC_curve("AUPRC", 'blue', "auprc_plot", r_list, p_list, auprc, False)
