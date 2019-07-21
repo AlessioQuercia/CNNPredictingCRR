@@ -352,7 +352,7 @@ def conv_net(x):
     return out
 
 
-def depict_ROC_curve(label, color, filename, fpr, tpr, auc, randomline=True):
+def depict_ROC_curve(label, color, filename, fpr, tpr, auc, xlabel, ylabel, title, randomline=True):
     """
     :type color: string (hex color code)
     :type fname: string
@@ -361,19 +361,19 @@ def depict_ROC_curve(label, color, filename, fpr, tpr, auc, randomline=True):
 
     plt.figure(figsize=(4, 4), dpi=80)
 
-    setup_ROC_curve_plot(plt)
+    setup_ROC_curve_plot(plt, xlabel, ylabel, title)
     add_ROC_curve(plt, color, label, tpr, fpr, auc)
     save_ROC_curve_plot(plt, filename, randomline)
 
 
-def setup_ROC_curve_plot(plt):
+def setup_ROC_curve_plot(plt, xlabel, ylabel, title):
     """
     :type plt: matplotlib.pyplot
     """
 
-    plt.xlabel("FPR", fontsize=14)
-    plt.ylabel("TPR", fontsize=14)
-    plt.title("ROC Curve", fontsize=14)
+    plt.xlabel(xlabel, fontsize=14)
+    plt.ylabel(ylabel, fontsize=14)
+    plt.title(title, fontsize=14)
 
 
 def add_ROC_curve(plt, color, label, tpr, fpr, auc):
@@ -463,7 +463,7 @@ def save_ROC_curve_plot(plt, filename, randomline=True):
 
 
 
-input_file = 'data\\bioinfo\\tasks\\GM12878_AEAP.npz'
+input_file = 'data\\bioinfo\\tasks\\GM12878_AEIE.npz'
 data_dict = np.load(input_file)
 for k,v in data_dict.items():
     if k == "arr_0":
@@ -648,6 +648,10 @@ print(p_list)
 
 auprc = auc(r_list, p_list)
 
-depict_ROC_curve("AUROC", 'blue', "auroc_plot", fpr_list, tpr_list, auroc, False)
+auroc_output_file = "GM12878_AEIE_auroc"
 
-depict_ROC_curve("AUPRC", 'blue', "auprc_plot", r_list, p_list, auprc, False)
+auprc_output_file = "GM12878_AEIE_auprc"
+
+depict_ROC_curve("AUROC", 'blue', auroc_output_file, fpr_list, tpr_list, auroc, "FPR", "TPR", "ROC Curve", False)
+
+depict_ROC_curve("AUPRC", 'blue', auprc_output_file, r_list, p_list, auprc, "Recall", "Precision", "ROC Curve", False)
