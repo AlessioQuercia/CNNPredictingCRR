@@ -600,7 +600,8 @@ plt.subplots_adjust(wspace=0.3)
 
 ##### Create parameters vectors #####
 
-act_functions = ["relu", "sigmoid", "tanh"]
+act_functions = ["relu", "tanh"]
+maxpooling = [True, False]
 conv_layers = [2, 3]
 hid_layers = [1, 2]
 hid_n_num = [64]
@@ -614,184 +615,185 @@ k = 2
 count = 0
 
 for a_f in act_functions:
-    for c_l in conv_layers:
-        for h_l in hid_layers:
-            for h_n_n in hid_n_num:
+    for mp in maxpooling:
+        for c_l in conv_layers:
+            for h_l in hid_layers:
+                for h_n_n in hid_n_num:
 
-                #### HYPER-PARAMETERS ####
-                training_iters = 10
-                learning_rate = 0.001
-                batch_size = 100
-
-
-                #### NETWORK PARAMETERS ####
-                n_classes = 1   # Number of classes to predict (output_number)
+                    #### HYPER-PARAMETERS ####
+                    training_iters = 10
+                    learning_rate = 0.001
+                    batch_size = 100
 
 
-                #### DEFINE PLACEHOLDERS ####
-                # Both placeholders are of type float and the argument filled with None refers to the batch size
-                x = tf.placeholder("float", [None, 200, 1, 4])
-                y = tf.placeholder("float", [None, n_classes])
+                    #### NETWORK PARAMETERS ####
+                    n_classes = 1   # Number of classes to predict (output_number)
 
 
-                # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-                pred = conv_net_gen(x, c_l, h_l-1, h_n_n, ker_r, ker_c, ker_ch, ker_num, n_classes, k, a_f, count)
-                cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
-                optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+                    #### DEFINE PLACEHOLDERS ####
+                    # Both placeholders are of type float and the argument filled with None refers to the batch size
+                    x = tf.placeholder("float", [None, 200, 1, 4])
+                    y = tf.placeholder("float", [None, n_classes])
 
 
-                # MODEL EVALUATION FUNCTIONS
-                # # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
-                # # and both will be a column vector.
-                # correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-                # # Calculate accuracy across all the given images and average them out.
-                # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-                accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
-                _, auroc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='ROC', name="AUROC")
-                _, auprc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='PR', name="AUPRC")
-                _, tp_mes = tf.metrics.true_positives(y, tf.round(tf.sigmoid(pred)))
-                _, tn_mes = tf.metrics.true_negatives(y, tf.round(tf.sigmoid(pred)))
-                _, fp_mes = tf.metrics.false_positives(y, tf.round(tf.sigmoid(pred)))
-                _, fn_mes = tf.metrics.false_negatives(y, tf.round(tf.sigmoid(pred)))
-
-                # INITIALIZING THE VARIABLES
-                init = tf.global_variables_initializer()
-                init_local = tf.local_variables_initializer()
-                tvars = tf.local_variables()
+                    # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
+                    pred = conv_net_gen(x, c_l, h_l-1, h_n_n, ker_r, ker_c, ker_ch, ker_num, n_classes, k, a_f, count, maxpooling=mp)
+                    cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
+                    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 
-                # AUROC
-                tpr_list = []
-                fpr_list = []
-                auroc_list = []
+                    # MODEL EVALUATION FUNCTIONS
+                    # # Check whether the index of the maximum value of the predicted image is equal to the actual labelled image.
+                    # # and both will be a column vector.
+                    # correct_prediction = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
+                    # # Calculate accuracy across all the given images and average them out.
+                    # accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-                # AUPRC
-                p_list = []
-                r_list = []
-                auprc_list = []
+                    accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), tf.float32))
+                    _, auroc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='ROC', name="AUROC")
+                    _, auprc_mes = tf.metrics.auc(y, tf.round(tf.sigmoid(pred)), curve='PR', name="AUPRC")
+                    _, tp_mes = tf.metrics.true_positives(y, tf.round(tf.sigmoid(pred)))
+                    _, tn_mes = tf.metrics.true_negatives(y, tf.round(tf.sigmoid(pred)))
+                    _, fp_mes = tf.metrics.false_positives(y, tf.round(tf.sigmoid(pred)))
+                    _, fn_mes = tf.metrics.false_negatives(y, tf.round(tf.sigmoid(pred)))
 
-                # TRAINING AND TESTING THE MODEL
-                with tf.Session() as sess:
-                    sess.run(init)
-                    sess.run(init_local)
-                    train_loss = []
-                    test_loss = []
-                    train_accuracy = []
-                    test_accuracy = []
-                    train_auroc = []
-                    test_auroc = []
-                    train_auprc = []
-                    test_auprc = []
-                    y_preds = []
-                    y_trues = []
-                    summary_writer = tf.summary.FileWriter('./Output', sess.graph)
-                    for i in range(training_iters):
-                        # sess.run(tf.local_variables_initializer())
-                        for batch in range(len(train_X)//batch_size):
-                            batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
-                            batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
-                            # Run optimization op (backprop).
-                                # Calculate batch loss and accuracy
-                            opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
-                            loss, acc, auroc, auprc = sess.run([cost, accuracy, auroc_mes, auprc_mes], feed_dict={x: batch_x, y: batch_y})
-                            # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
-                        print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.6f}".format(acc))
+                    # INITIALIZING THE VARIABLES
+                    init = tf.global_variables_initializer()
+                    init_local = tf.local_variables_initializer()
+                    tvars = tf.local_variables()
 
-                        #print("Optimization Finished!")
 
-                        sess.run(tf.local_variables_initializer())
+                    # AUROC
+                    tpr_list = []
+                    fpr_list = []
+                    auroc_list = []
 
-                        y_pred, y_true, tp, tn, fp, fn, test_acc,test_loss, test_auroc, test_auprc = \
-                            sess.run([tf.round(tf.nn.sigmoid(pred)), y, tp_mes, tn_mes, fp_mes, fn_mes, accuracy, cost, auroc_mes, auprc_mes],
-                                     feed_dict={x: test_X,y : test_Y})
+                    # AUPRC
+                    p_list = []
+                    r_list = []
+                    auprc_list = []
 
-                        y_preds.append(y_pred)
-                        y_trues.append(y_true)
+                    # TRAINING AND TESTING THE MODEL
+                    with tf.Session() as sess:
+                        sess.run(init)
+                        sess.run(init_local)
+                        train_loss = []
+                        test_loss = []
+                        train_accuracy = []
+                        test_accuracy = []
+                        train_auroc = []
+                        test_auroc = []
+                        train_auprc = []
+                        test_auprc = []
+                        y_preds = []
+                        y_trues = []
+                        summary_writer = tf.summary.FileWriter('./Output', sess.graph)
+                        for i in range(training_iters):
+                            # sess.run(tf.local_variables_initializer())
+                            for batch in range(len(train_X)//batch_size):
+                                batch_x = train_X[batch*batch_size:min((batch+1)*batch_size,len(train_X))]
+                                batch_y = train_Y[batch*batch_size:min((batch+1)*batch_size,len(train_Y))]
+                                # Run optimization op (backprop).
+                                    # Calculate batch loss and accuracy
+                                opt = sess.run(optimizer, feed_dict={x: batch_x, y: batch_y})
+                                loss, acc, auroc, auprc = sess.run([cost, accuracy, auroc_mes, auprc_mes], feed_dict={x: batch_x, y: batch_y})
+                                # print(sess.run(tf.equal(tf.round(tf.nn.sigmoid(pred)), y), feed_dict={x: batch_x, y: batch_y}))
+                            print("Iter " + str(i) + ":\n" + "Training Error: " + "{:.6f}".format(loss) + ", Training Accuracy: " + "{:.6f}".format(acc))
 
-                        print(test_X.shape, tp, tn, fp, fn, compute_TPR(tp, fn), compute_FPR(fp, tn), compute_precision(tp, fp), compute_recall(tp, fn))
+                            #print("Optimization Finished!")
 
-                        print("Test Error: " + "{:.6f}".format(test_loss) + ", Test Accuracy: " + "{:.6f}".format(test_acc)
-                              + ", Test AUROC: " + "{:.6f}".format(test_auroc) + ", Test AUPRC: " + "{:.6f}".format(test_auprc) + "\n")
+                            sess.run(tf.local_variables_initializer())
 
-                        # print(sess.run([tf.round(tf.nn.sigmoid(pred)), y], feed_dict={x: batch_x, y: batch_y}))
-                        # print(roc_curve(sess.run(y, feed_dict={x: test_X,y : test_Y}), sess.run(tf.round(tf.nn.sigmoid(pred)))))
+                            y_pred, y_true, tp, tn, fp, fn, test_acc,test_loss, test_auroc, test_auprc = \
+                                sess.run([tf.round(tf.nn.sigmoid(pred)), y, tp_mes, tn_mes, fp_mes, fn_mes, accuracy, cost, auroc_mes, auprc_mes],
+                                         feed_dict={x: test_X,y : test_Y})
 
-                        # tpr_list.append(compute_TPR(tp, fn))
-                        # fpr_list.append(compute_FPR(fp, tn))
-                        # auroc_list.append(test_auroc)
-                        # p_list.append(compute_precision(tp, fp))
-                        # r_list.append(compute_recall(tp, fn))
-                        # auprc_list.append(test_auprc)
+                            y_preds.append(y_pred)
+                            y_trues.append(y_true)
 
-                        # train_loss.append(loss)
-                        # test_loss.append(test_loss)
-                        # train_accuracy.append(acc)
-                        # test_accuracy.append(test_acc)
-                        # train_auroc.append(auroc)
-                        # test_auroc.append(test_auroc)
-                        # train_auprc.append(auprc)
-                        # test_auprc.append(test_auprc)
-                        count += 1
-                    summary_writer.close()
+                            print(test_X.shape, tp, tn, fp, fn, compute_TPR(tp, fn), compute_FPR(fp, tn), compute_precision(tp, fp), compute_recall(tp, fn))
 
-                # print(auc(fpr_list, tpr_list))
-                fpr_list = []
-                tpr_list = []
-                fpr_list.append(0.0)
-                tpr_list.append(0.0)
+                            print("Test Error: " + "{:.6f}".format(test_loss) + ", Test Accuracy: " + "{:.6f}".format(test_acc)
+                                  + ", Test AUROC: " + "{:.6f}".format(test_auroc) + ", Test AUPRC: " + "{:.6f}".format(test_auprc) + "\n")
 
-                for i in range(len(y_preds)):
-                    # print(roc_curve(y_trues[i], y_preds[i]))
-                    fpr_list.append(roc_curve(y_trues[i], y_preds[i])[0][1])
-                    tpr_list.append(roc_curve(y_trues[i], y_preds[i])[1][1])
+                            # print(sess.run([tf.round(tf.nn.sigmoid(pred)), y], feed_dict={x: batch_x, y: batch_y}))
+                            # print(roc_curve(sess.run(y, feed_dict={x: test_X,y : test_Y}), sess.run(tf.round(tf.nn.sigmoid(pred)))))
 
-                tpr_list.append(1.0)
-                fpr_list.append(1.0)
+                            # tpr_list.append(compute_TPR(tp, fn))
+                            # fpr_list.append(compute_FPR(fp, tn))
+                            # auroc_list.append(test_auroc)
+                            # p_list.append(compute_precision(tp, fp))
+                            # r_list.append(compute_recall(tp, fn))
+                            # auprc_list.append(test_auprc)
 
-                fpr_list, tpr_list = zip(*sorted(zip(fpr_list, tpr_list)))
+                            # train_loss.append(loss)
+                            # test_loss.append(test_loss)
+                            # train_accuracy.append(acc)
+                            # test_accuracy.append(test_acc)
+                            # train_auroc.append(auroc)
+                            # test_auroc.append(test_auroc)
+                            # train_auprc.append(auprc)
+                            # test_auprc.append(test_auprc)
+                            count += 1
+                        summary_writer.close()
 
-                fpr_list, tpr_list = (list(t) for t in zip(*sorted(zip(fpr_list, tpr_list))))
+                    # print(auc(fpr_list, tpr_list))
+                    fpr_list = []
+                    tpr_list = []
+                    fpr_list.append(0.0)
+                    tpr_list.append(0.0)
 
-                # print(fpr_list)
-                # print(tpr_list)
+                    for i in range(len(y_preds)):
+                        # print(roc_curve(y_trues[i], y_preds[i]))
+                        fpr_list.append(roc_curve(y_trues[i], y_preds[i])[0][1])
+                        tpr_list.append(roc_curve(y_trues[i], y_preds[i])[1][1])
 
-                auroc = auc(fpr_list, tpr_list)
+                    tpr_list.append(1.0)
+                    fpr_list.append(1.0)
 
-                r_list = []
-                p_list = []
-                r_list.append(0.0)
-                p_list.append(1.0)
+                    fpr_list, tpr_list = zip(*sorted(zip(fpr_list, tpr_list)))
 
-                for i in range(len(y_preds)):
-                    # print(precision_recall_curve(y_trues[i], y_preds[i]))
-                    r_list.append(precision_recall_curve(y_trues[i], y_preds[i])[1][1])
-                    p_list.append(precision_recall_curve(y_trues[i], y_preds[i])[0][1])
+                    fpr_list, tpr_list = (list(t) for t in zip(*sorted(zip(fpr_list, tpr_list))))
 
-                r_list, p_list = zip(*sorted(zip(r_list, p_list)))
+                    # print(fpr_list)
+                    # print(tpr_list)
 
-                r_list, p_list = (list(t) for t in zip(*sorted(zip(r_list, p_list))))
+                    auroc = auc(fpr_list, tpr_list)
 
-                r_list.append(1.0)
-                p_list.append(0.0)
+                    r_list = []
+                    p_list = []
+                    r_list.append(0.0)
+                    p_list.append(1.0)
 
-                # print(r_list)
-                # print(p_list)
+                    for i in range(len(y_preds)):
+                        # print(precision_recall_curve(y_trues[i], y_preds[i]))
+                        r_list.append(precision_recall_curve(y_trues[i], y_preds[i])[1][1])
+                        p_list.append(precision_recall_curve(y_trues[i], y_preds[i])[0][1])
 
-                auprc = auc(r_list, p_list)
+                    r_list, p_list = zip(*sorted(zip(r_list, p_list)))
 
-                roc_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "AUROC: " + str(auroc)
-                pr_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "AUPRC: " + str(auprc)
+                    r_list, p_list = (list(t) for t in zip(*sorted(zip(r_list, p_list))))
 
-                # ROC Curve
-                axs[0].plot(fpr_list, tpr_list, label=roc_label)
+                    r_list.append(1.0)
+                    p_list.append(0.0)
 
-                # PR Curve
-                axs[1].plot(r_list, p_list, label=pr_label)
+                    # print(r_list)
+                    # print(p_list)
+
+                    auprc = auc(r_list, p_list)
+
+                    roc_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auroc: {:.2f}".format(auroc)
+                    pr_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auprc: {:.2f}".format(auprc)
+
+                    # ROC Curve
+                    axs[0].plot(fpr_list, tpr_list, label=roc_label)
+
+                    # PR Curve
+                    axs[1].plot(r_list, p_list, label=pr_label)
 
 
 axs[0].legend(loc="lower right")
-axs[1].legend(loc="lower right")
+axs[1].legend(loc="lower left")
 
 # auroc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEIE_auroc"
 #
