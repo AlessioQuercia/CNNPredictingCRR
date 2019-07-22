@@ -5,6 +5,8 @@ import csv
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import auc, roc_curve, precision_recall_curve
 import matplotlib.pyplot as plt
+from keras.models import Sequential
+from keras.layers import Dense, Conv1D, Conv2D, Flatten
 
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0" #for training on gpu
@@ -463,7 +465,7 @@ def save_ROC_curve_plot(plt, filename, randomline=True):
 
 
 
-input_file = 'data\\bioinfo\\tasks\\GM12878_AEIE.npz'
+input_file = 'data\\bioinfo\\tasks\\GM12878_AEAP.npz'
 data_dict = np.load(input_file)
 for k,v in data_dict.items():
     if k == "arr_0":
@@ -648,10 +650,33 @@ print(p_list)
 
 auprc = auc(r_list, p_list)
 
-auroc_output_file = "GM12878_AEIE_auroc"
+auroc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEAP_auroc"
 
-auprc_output_file = "GM12878_AEIE_auprc"
+auprc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEAP_auprc"
 
 depict_ROC_curve("AUROC", 'blue', auroc_output_file, fpr_list, tpr_list, auroc, "FPR", "TPR", "ROC Curve", False)
 
 depict_ROC_curve("AUPRC", 'blue', auprc_output_file, r_list, p_list, auprc, "Recall", "Precision", "ROC Curve", False)
+
+
+
+###### Keras Implementation ######
+
+# #create model Keras
+# model = Sequential()#add model layers
+# model.add(Conv2D(32, kernel_size=(8,1), activation='relu', input_shape=(200,1,4)))
+# model.add(Conv2D(64, kernel_size=(8,1), activation='relu'))
+# model.add(Flatten())
+# model.add(Dense(64))
+# model.add(Dense(1, activation='sigmoid'))
+#
+# #compile model using accuracy to measure model performance
+# model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+#
+# #train the model
+# model.fit(train_X, train_Y, validation_data=(test_X, test_Y), epochs=20)
+#
+# #test the model
+# model.predict(test_X)
+
+
