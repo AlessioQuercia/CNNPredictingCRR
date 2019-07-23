@@ -189,6 +189,12 @@ def generate_dataset_tasks(input_file, *output_files):
     data_X_IEIP = []
     data_Y_IEIP = []
 
+    data_X_AXIX = []
+    data_Y_AXIX = []
+
+    data_X_AEAPR = []
+    data_Y_AEAPR = []
+
     print(data_X.shape[0])
 
     #### TASK SUBDIVISION ####
@@ -198,21 +204,43 @@ def generate_dataset_tasks(input_file, *output_files):
             data_Y_AEAP.append(np.array([0]))
             data_X_AEIE.append(data_X[i])
             data_Y_AEIE.append(np.array([0]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([0]))
+
         elif data_Y[i][2] == 1:             # AP - 2
             data_X_AEAP.append(data_X[i])
             data_Y_AEAP.append(np.array([1]))
             data_X_APIP.append(data_X[i])
             data_Y_APIP.append(np.array([0]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([0]))
         elif data_Y[i][1] == 1:             # IE - 1
             data_X_AEIE.append(data_X[i])
             data_Y_AEIE.append(np.array([1]))
             data_X_IEIP.append(data_X[i])
             data_Y_IEIP.append(np.array([0]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([1]))
         elif data_Y[i][3] == 1:             # IP - 3
             data_X_APIP.append(data_X[i])
             data_Y_APIP.append(np.array([1]))
             data_X_IEIP.append(data_X[i])
             data_Y_IEIP.append(np.array([1]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([1]))
+        elif data_Y[i][4] == 1:             # AX - 4
+            data_X_AXIX.append(data_X[i])
+            data_Y_AXIX.append(np.array([0]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([1]))
+        elif data_Y[i][5] == 1:             # IX - 5
+            data_X_AXIX.append(data_X[i])
+            data_Y_AXIX.append(np.array([1]))
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([1]))
+        elif data_Y[i][6] == 1:             # UK - 6
+            data_X_AEAPR.append(data_X[i])
+            data_Y_AEAPR.append(np.array([1]))
 
     data_X_AEAP = np.array(data_X_AEAP)
     data_Y_AEAP = np.array(data_Y_AEAP)
@@ -225,6 +253,12 @@ def generate_dataset_tasks(input_file, *output_files):
 
     data_X_IEIP = np.array(data_X_IEIP)
     data_Y_IEIP = np.array(data_Y_IEIP)
+
+    data_X_AXIX = np.array(data_X_AXIX)
+    data_Y_AXIX = np.array(data_Y_AXIX)
+
+    data_X_AEAPR = np.array(data_X_AEAPR)
+    data_Y_AEAPR = np.array(data_Y_AEAPR)
 
     print(data_X_AEAP.shape)
     print(data_Y_AEAP.shape)
@@ -262,6 +296,24 @@ def generate_dataset_tasks(input_file, *output_files):
     data_list.append(data_X_IEIP)
     data_list.append(data_Y_IEIP)
     output_file = output_files[3]           #IEIP
+    np.savez(output_file, *data_list)
+
+    print(data_X_AXIX.shape)
+    print(data_Y_AXIX.shape)
+
+    data_list = []
+    data_list.append(data_X_AXIX)           #AXIX
+    data_list.append(data_Y_AXIX)
+    output_file = output_files[4]
+    np.savez(output_file, *data_list)
+
+    print(data_X_AEAPR.shape)
+    print(data_Y_AEAPR.shape)
+
+    data_list = []
+    data_list.append(data_X_AEAPR)       # AEAPR
+    data_list.append(data_Y_AEAPR)
+    output_file = output_files[5]
     np.savez(output_file, *data_list)
 
 
