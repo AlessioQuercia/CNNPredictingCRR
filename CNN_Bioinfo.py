@@ -561,8 +561,8 @@ def save_ROC_curve_plot(plt, filename, randomline=True):
 #
 # generate_dataset_tasks(output_file, *output_files)
 
-files = ['data\\bioinfo\\tasks\\GM12878_AEAP', 'data\\bioinfo\\tasks\\HelaS3_AEAP',
-         'data\\bioinfo\\tasks\\HepG2_AEAP', 'data\\bioinfo\\tasks\\K562_AEAP']
+files = ['data\\bioinfo\\tasks\\GM12878_AEIE', 'data\\bioinfo\\tasks\\HelaS3_AEIE',
+         'data\\bioinfo\\tasks\\HepG2_AEIE', 'data\\bioinfo\\tasks\\K562_AEIE']
 
 count = 0
 
