@@ -561,61 +561,69 @@ def save_ROC_curve_plot(plt, filename, randomline=True):
 #
 # generate_dataset_tasks(output_file, *output_files)
 
-
-##### DATA PREPROCESSING #####
-input_file = 'data\\bioinfo\\tasks\\GM12878_AEIE.npz'
-data_dict = np.load(input_file)
-for k,v in data_dict.items():
-    if k == "arr_0":
-        data_X=v
-    if k == "arr_1":
-        data_Y=v
-data_X=np.array(data_X)
-data_Y=np.array(data_Y)
-print(data_X.shape)
-print(data_Y.shape)
-
-train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
-
-train_X = np.array(train_X)
-test_X = np.array(test_X)
-train_Y = np.array(train_Y)
-test_Y = np.array(test_Y)
-
-print(train_X.shape)
-print(train_Y.shape)
-print(test_X.shape)
-print(test_Y.shape)
-
-##### Create figure and subplots #####
-fig, axs = plt.subplots(1, 2)
-fig.set_size_inches(11, 5)
-axs[0].set_title('ROC Curve')
-axs[0].set_xlabel("FPR")
-axs[0].set_ylabel("TPR")
-axs[1].set_xlabel("Recall")
-axs[1].set_ylabel("Precision")
-axs[1].set_title('PR Curve')
-plt.subplots_adjust(wspace=0.3)
-
-##### Create parameters vectors #####
-
-act_functions = ["relu", "tanh"]
-maxpooling = [True, False]
-conv_layers = [2, 3]
-hid_layers = [1, 2]
-hid_n_num = [64]
-
-ker_r = 8
-ker_c = 1
-ker_ch = 4
-ker_num = 32
-k = 2
+files = ['data\\bioinfo\\tasks\\GM12878_AEAP', 'data\\bioinfo\\tasks\\HelaS3_AEAP',
+         'data\\bioinfo\\tasks\\HepG2_AEAP', 'data\\bioinfo\\tasks\\K562_AEAP']
 
 count = 0
 
-for a_f in act_functions:
-    for mp in maxpooling:
+for file in files:
+    ##### DATA PREPROCESSING #####
+    input_file = file + ".npz"
+    data_dict = np.load(input_file)
+    for k,v in data_dict.items():
+        if k == "arr_0":
+            data_X=v
+        if k == "arr_1":
+            data_Y=v
+    data_X=np.array(data_X)
+    data_Y=np.array(data_Y)
+    print(data_X.shape)
+    print(data_Y.shape)
+
+    train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
+
+    train_X = np.array(train_X)
+    test_X = np.array(test_X)
+    train_Y = np.array(train_Y)
+    test_Y = np.array(test_Y)
+
+    print(train_X.shape)
+    print(train_Y.shape)
+    print(test_X.shape)
+    print(test_Y.shape)
+
+    ##### Create figure and subplots #####
+    fig, axs = plt.subplots(2, 2)
+    fig.set_size_inches(11, 10)
+    axs[0][0].set_title('ROC Curve - Relu')
+    axs[0][0].set_xlabel("FPR")
+    axs[0][0].set_ylabel("TPR")
+    axs[0][1].set_xlabel("Recall")
+    axs[0][1].set_ylabel("Precision")
+    axs[0][1].set_title('PR Curve - Relu')
+    axs[1][0].set_title('ROC Curve - Tanh')
+    axs[1][0].set_xlabel("FPR")
+    axs[1][0].set_ylabel("TPR")
+    axs[1][1].set_xlabel("Recall")
+    axs[1][1].set_ylabel("Precision")
+    axs[1][1].set_title('PR Curve - Tanh')
+    plt.subplots_adjust(wspace=0.3)
+
+    ##### Create parameters vectors #####
+
+    act_functions = ["relu", "tanh"]
+    # maxpooling = [True, False]
+    conv_layers = [2, 3]
+    hid_layers = [1, 2]
+    hid_n_num = [32, 64]
+
+    ker_r = 8
+    ker_c = 1
+    ker_ch = 4
+    ker_num = 32
+    k = 2
+
+    for a in range(len(act_functions)):
         for c_l in conv_layers:
             for h_l in hid_layers:
                 for h_n_n in hid_n_num:
@@ -637,7 +645,7 @@ for a_f in act_functions:
 
 
                     # DEFINE THE CNN MODEL, THE COST FUNCTION AND THE OPTIMIZER
-                    pred = conv_net_gen(x, c_l, h_l-1, h_n_n, ker_r, ker_c, ker_ch, ker_num, n_classes, k, a_f, count, maxpooling=mp)
+                    pred = conv_net_gen(x, c_l, h_l-1, h_n_n, ker_r, ker_c, ker_ch, ker_num, n_classes, k, act_functions[a], count)
                     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=pred, labels=y))
                     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
@@ -782,24 +790,30 @@ for a_f in act_functions:
 
                     auprc = auc(r_list, p_list)
 
-                    roc_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auroc: {:.2f}".format(auroc)
-                    pr_label = a_f + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auprc: {:.2f}".format(auprc)
+                    roc_label = act_functions[a] + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auroc: {:.5f}".format(auroc)
+                    pr_label = act_functions[a] + " " + str(c_l) + "CL" + " " + str(h_l) + "HL" + " " + str(h_n_n) + "N" + " " + "auprc: {:.5f}".format(auprc)
+
+
 
                     # ROC Curve
-                    axs[0].plot(fpr_list, tpr_list, label=roc_label)
+                    axs[a][0].plot(fpr_list, tpr_list, label=roc_label)
 
                     # PR Curve
-                    axs[1].plot(r_list, p_list, label=pr_label)
+                    axs[a][1].plot(r_list, p_list, label=pr_label)
 
 
-axs[0].legend(loc="lower right")
-axs[1].legend(loc="lower left")
+    axs[0][0].legend(loc="lower right", fontsize='x-small')
+    axs[0][1].legend(loc="lower left", fontsize='x-small')
+    axs[1][0].legend(loc="lower right", fontsize='x-small')
+    axs[1][1].legend(loc="lower left", fontsize='x-small')
 
-# auroc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEIE_auroc"
-#
-# auprc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEIE_auprc"
+    # auroc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEIE_auroc"
+    #
+    # auprc_output_file = "data\\bioinfo\\tasks\\results\\GM12878_AEIE_auprc"
 
-plt.savefig("data\\bioinfo\\tasks\\results\\GM12878_AEIE_curves")
+    output_file = file + "_curves"
+
+    plt.savefig(output_file)
 
     # depict_ROC_curve("AUROC", 'blue', auroc_output_file, fpr_list, tpr_list, auroc, "FPR", "TPR", "ROC Curve", "dashed", 1)
     #
