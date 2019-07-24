@@ -20,14 +20,17 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.logging.set_verbosity(tf.logging.ERROR)
 
 
-def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activation, out_num=1, k=2, ker_c=1, maxpooling=True, strides=1):
+def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activation, out_num=1, k=2, ker_c=1,
+              batch_norm=False, dropout=True, maxpooling=True, strides=1):
     model = Sequential()  # add model layers
 
     ##### CONVOLUTIONAL LAYERS #####
     for i in range(conv_num):
         print("\nConvolution Layer: " + str(i))
         model.add(Conv2D(ker_num, kernel_size=(ker_r, ker_c), activation=activation, input_shape=(x_w, x_h, x_d)))
-        if (maxpooling):
+        if batch_norm:
+            model.add(BatchNormalization())
+        if maxpooling:
             model.add(MaxPool2D(pool_size=(k, 1), strides=strides))
         ker_num *= 2
 
@@ -36,7 +39,10 @@ def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activ
 
     ##### FULLY CONNECTED HIDDEN LAYERS #####
     for j in range(hid_num):
+        print("\nFully Connected Hidden Layer: " + str(j))
         model.add(Dense(hid_n_num))
+        if dropout:
+            model.add(Dropout(0.5))
 
     ##### FULLY CONNECTED OUTPUT #####
     model.add(Dense(out_num, activation="sigmoid"))
@@ -133,7 +139,7 @@ for file in files:
     act_functions = ["relu", "tanh"]
     # maxpooling = [True, False]
     conv_layers = [2, 3]
-    hid_layers = [1, 2]
+    hid_layers = [2, 3]
     hid_n_num = [32, 64]
     ker_r = 8
     ker_num = 32
@@ -150,7 +156,7 @@ for file in files:
                     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
                     #train the model
-                    model.fit(train_X, train_Y, validation_data=(test_X, test_Y), epochs=20)
+                    model.fit(train_X, train_Y, validation_data=(test_X, test_Y), epochs=10)
 
                     #test the model
                     preds = model.predict(test_X)
