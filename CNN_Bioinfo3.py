@@ -49,8 +49,6 @@ def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activ
 
     return model
 
-
-
 files = ['data\\bioinfo\\tasks\\GM12878_AEAP', 'data\\bioinfo\\tasks\\HelaS3_AEAP',
          'data\\bioinfo\\tasks\\HepG2_AEAP', 'data\\bioinfo\\tasks\\K562_AEAP',
          'data\\bioinfo\\tasks\\GM12878_AEIE', 'data\\bioinfo\\tasks\\HelaS3_AEIE',
@@ -71,28 +69,28 @@ for file in files:
     print(data_X.shape)
     print(data_Y.shape)
 
-    if input_file.__contains__("AEIE"):
-        print("AEIE")
-        data_X_temp = []
-        data_y_temp = []
-        count_zero = 0
-        count_one = 0
-        for i in range(len(data_Y)):
-            if data_Y[i] == 0:
-                count_zero += 1
-                data_X_temp.append(data_X[i])
-                data_y_temp.append(data_Y[i])
-            else:
-                count_one+=1
-                if count_one <= 10000:
-                    data_X_temp.append(data_X[i])
-                    data_y_temp.append(data_Y[i])
-        print(count_zero, count_one)
-        data_X = data_X_temp
-        data_Y = data_y_temp
-        data_X = np.array(data_X)
-        data_Y = np.array(data_Y)
-        print(data_X.shape, data_Y.shape)
+    # if input_file.__contains__("AEIE"):
+    #     print("AEIE")
+    #     data_X_temp = []
+    #     data_y_temp = []
+    #     count_zero = 0
+    #     count_one = 0
+    #     for i in range(len(data_Y)):
+    #         if data_Y[i] == 0:
+    #             count_zero += 1
+    #             data_X_temp.append(data_X[i])
+    #             data_y_temp.append(data_Y[i])
+    #         else:
+    #             count_one+=1
+    #             if count_one <= 10000:
+    #                 data_X_temp.append(data_X[i])
+    #                 data_y_temp.append(data_Y[i])
+    #     print(count_zero, count_one)
+    #     data_X = data_X_temp
+    #     data_Y = data_y_temp
+    #     data_X = np.array(data_X)
+    #     data_Y = np.array(data_Y)
+    #     print(data_X.shape, data_Y.shape)
 
     train_X, test_X, train_Y, test_Y = train_test_split(data_X, data_Y, test_size=0.3, random_state=7)
 
@@ -106,9 +104,20 @@ for file in files:
     print(test_X.shape)
     print(test_Y.shape)
 
+    ind = 2
+    if input_file.__contains__("AEAPR"):
+        ind = 4
+
+    title_arr = input_file[19:-4].split('_')
+    cell_line = title_arr[0]
+    task = " - " + title_arr[1][:ind] + " vs " + title_arr[1][2:]
+    title = cell_line + task
+
+    print("TITLE: " + title)
 
     ##### Create figure and subplots #####
     fig, axs = plt.subplots(2, 2)
+    fig.suptitle(title)
     fig.set_size_inches(11, 10)
     axs[0][0].set_title('ROC Curve - Relu')
     axs[0][0].set_xlabel("FPR")
