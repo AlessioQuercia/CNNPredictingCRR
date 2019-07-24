@@ -105,12 +105,14 @@ for file in files:
     print(test_Y.shape)
 
     ind = 2
+    rest = ""
     if input_file.__contains__("AEAPR"):
         ind = 4
+        rest = "EST"
 
     title_arr = input_file[19:-4].split('_')
     cell_line = title_arr[0]
-    task = " - " + title_arr[1][:ind] + " vs " + title_arr[1][2:]
+    task = " - " + title_arr[1][:ind] + " vs " + title_arr[ind-1][ind:] + rest
     title = cell_line + task
 
     print("TITLE: " + title)
