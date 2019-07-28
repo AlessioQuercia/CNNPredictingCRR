@@ -4,8 +4,6 @@ from sklearn.metrics import auc, roc_curve, precision_recall_curve
 import matplotlib.pyplot as plt
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Flatten, BatchNormalization, MaxPool2D, Dropout
-from keras.optimizers import Adam
-from keras.callbacks import EarlyStopping
 import tensorflow as tf
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0" #for training on gpu
@@ -26,6 +24,8 @@ def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activ
 
     ##### CONVOLUTIONAL LAYERS #####
     for i in range(conv_num):
+        # if i == conv_num-1:
+        #     activation = "softmax"
         print("\nConvolution Layer: " + str(i))
         model.add(Conv2D(ker_num, kernel_size=(ker_r, ker_c), activation=activation, input_shape=(x_w, x_h, x_d)))
         if batch_norm:
@@ -49,10 +49,7 @@ def cnn_model(x_w, x_h, x_d, conv_num, hid_num, hid_n_num, ker_r, ker_num, activ
 
     return model
 
-files = ['data\\bioinfo\\tasks\\GM12878_AEAP', 'data\\bioinfo\\tasks\\HelaS3_AEAP',
-         'data\\bioinfo\\tasks\\HepG2_AEAP', 'data\\bioinfo\\tasks\\K562_AEAP',
-         'data\\bioinfo\\tasks\\GM12878_AEIE', 'data\\bioinfo\\tasks\\HelaS3_AEIE',
-         'data\\bioinfo\\tasks\\HepG2_AEIE', 'data\\bioinfo\\tasks\\K562_AEIE']
+files = ['data\\bioinfo\\tasks\\GM12878_AEIE']
 
 for file in files:
     print("STARTING FILE " + file)
