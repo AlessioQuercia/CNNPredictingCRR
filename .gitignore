@@ -7,3 +7,5 @@ data/fashion/
 data/mnist/
 CNN.py
 CNN_Fashion.py
+CNN_Bioinfo2.py
+CNN_BioinfoFirst.py
